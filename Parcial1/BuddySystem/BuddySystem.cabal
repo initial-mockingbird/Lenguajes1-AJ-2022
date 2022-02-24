@@ -1,0 +1,76 @@
+cabal-version: 1.12
+
+-- This file has been generated from package.yaml by hpack version 0.34.4.
+--
+-- see: https://github.com/sol/hpack
+
+name:           BuddySystem
+version:        0.1.0.0
+description:    Please see the README on GitHub at <https://github.com/githubuser/BuddySystem#readme>
+homepage:       https://github.com/githubuser/BuddySystem#readme
+bug-reports:    https://github.com/githubuser/BuddySystem/issues
+author:         Author name here
+maintainer:     example@example.com
+copyright:      2022 Author name here
+license:        BSD3
+license-file:   LICENSE
+build-type:     Simple
+extra-source-files:
+    README.md
+    ChangeLog.md
+
+source-repository head
+  type: git
+  location: https://github.com/githubuser/BuddySystem
+
+library
+  exposed-modules:
+      Buddy_System.Buddy
+      Buddy_System.Buddy_Internal.Buddy
+      Buddy_System.Buddy_Internal.Buddy2
+      Lib
+  other-modules:
+      Paths_BuddySystem
+  hs-source-dirs:
+      src
+  build-depends:
+      QuickCheck
+    , base >=4.7 && <5
+    , containers
+    , hspec
+    , mtl
+  default-language: Haskell2010
+
+executable BuddySystem-exe
+  main-is: Main.hs
+  other-modules:
+      Paths_BuddySystem
+  hs-source-dirs:
+      app
+  ghc-options: -threaded -rtsopts -with-rtsopts=-N
+  build-depends:
+      BuddySystem
+    , QuickCheck
+    , base >=4.7 && <5
+    , containers
+    , hspec
+    , mtl
+  default-language: Haskell2010
+
+test-suite BuddySystem-test
+  type: exitcode-stdio-1.0
+  main-is: Spec.hs
+  other-modules:
+      Test_Buddy.Test
+      Paths_BuddySystem
+  hs-source-dirs:
+      test
+  ghc-options: -threaded -rtsopts -with-rtsopts=-N
+  build-depends:
+      BuddySystem
+    , QuickCheck
+    , base >=4.7 && <5
+    , containers
+    , hspec
+    , mtl
+  default-language: Haskell2010
