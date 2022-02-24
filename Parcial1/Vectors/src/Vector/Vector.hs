@@ -37,7 +37,7 @@ we need two inner types: one for Vector and One for Scalars (and double the trou
 
 -}
 
-module Vector.Vector 
+module Vector.Vector
     ( fromList
     , SuperVector((+),(-),(*))
     , (%)
@@ -54,9 +54,9 @@ import Data.Kind (Type)
 newtype ListVector (dim :: Nat) a = Ve {getV :: [a]}
 
 
-type V3     = ListVector 3
-type V2     = ListVector 2
-type Vector = ListVector
+type V3     = ListVector 3 Double 
+type V2     = ListVector 2 Double
+type Vector (dim :: Nat) = ListVector dim Double
 
 class SuperVector v a  where
     type V v a
@@ -72,7 +72,6 @@ class SuperVector v a  where
     f   :: a -> v -> v -> S v a
 
 
-
 instance (KnownNat dim) => SuperVector (ListVector dim Double) Double where
     type V (ListVector dim Double) Double = (ListVector dim Double)
     type S (ListVector dim Double) Double = Double
@@ -80,8 +79,6 @@ instance (KnownNat dim) => SuperVector (ListVector dim Double) Double where
     Ve v - a = Ve $ map (Prelude.-a) v
     Ve v * a = Ve $ map (Prelude.*a) v
     f _ _ = error "Cannot do a Dot product between a scalar and a vector"
-
-
 
 
 instance (KnownNat dim) => SuperVector (ListVector dim Double) (ListVector dim Double) where
@@ -131,7 +128,7 @@ v % v' = f' 0 v v'
 main' :: IO ()
 main' = print v4
     where
-        v3 :: V3 Double
+        v3 :: V3 
         v3 = fromList [1,2,3]
         v3P1 =  v3 Vector.Vector.+ (3.0 :: Double)
         v4 = v3P1 Vector.Vector.+ v3

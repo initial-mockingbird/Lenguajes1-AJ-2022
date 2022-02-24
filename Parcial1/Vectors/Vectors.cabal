@@ -27,6 +27,7 @@ library
   exposed-modules:
       Lib
       Vector.Vector
+      Vector.VectorSafe
   other-modules:
       Paths_Vectors
   hs-source-dirs:
