@@ -1,134 +1,163 @@
 {-# LANGUAGE DataKinds             #-}
-{-# LANGUAGE TypeFamilies        #-}
-{-# LANGUAGE FlexibleInstances  #-}
-{-# LANGUAGE FlexibleContexts   #-}
-{-# LANGUAGE MultiParamTypeClasses  #-}
-{-# LANGUAGE FunctionalDependencies  #-}
+{-# LANGUAGE FlexibleContexts      #-}
+{-# LANGUAGE FlexibleInstances     #-}
+{-# LANGUAGE GADTs                 #-}
+{-# LANGUAGE MultiParamTypeClasses #-}
 {-# LANGUAGE ScopedTypeVariables   #-}
-{-# LANGUAGE TypeApplications      #-}
-
-{-
-Long live these guys!
-
-Vector implementation
-https://blog.jle.im/entry/fixed-length-vector-types-in-haskell.html
+{-# LANGUAGE TypeFamilies          #-}
+{-# LANGUAGE TypeOperators         #-}
+{-# LANGUAGE UndecidableInstances #-}
+{-# LANGUAGE LambdaCase #-} 
+{-# LANGUAGE PolyKinds #-}
 
 
-More interesting details here!!! (can't wait to learn unification from prolog!)
-https://programmable.computer/posts/datakinds_runtime.html#fnref1
+module Vector.Vector where
+
+import           Data.Kind    (Type)
+import           Data.Proxy   (Proxy (..))
+import qualified GHC.Num      as N
+--import           GHC.TypeNats 
+import qualified GHC.TypeLits as Lits
+import           Prelude      hiding (Num (..))
 
 
-it was a TOTAL NIGHTMARE implementing the vector class due to the SUPREME OVERLOADING OF *: it can return either a vector OR a scalar.
-
-So what do we do? we create a type family with a phantom type, credits to:
-
-https://stackoverflow.com/questions/59542658/how-to-overload-operator-with-type-synonyms
+data Nat = Z | S Nat deriving Eq
 
 
-We CAN'T generalize instances further since:
-                            
-instance (KnownNat dim, Num a) => SuperVector (ListVector dim a) a where
-                                                                 ^
-                Compiler will interpret this as: anything that has the form a: [a], Maybe a, Either String, Will all match!
-                (Also, compiler won't check the Num a >:( ).
 
-and since we are actually defining a type family, every output type should have been defined inside the class... That means
-we need two inner types: one for Vector and One for Scalars (and double the troubles!)
+type family Lit n where
+    Lit 0 = 'Z
+    Lit n = 'S (Lit (n Lits.- 1))
 
--}
+data Vec :: Nat -> Type -> Type  where
+    V1   :: a -> Vec (Lit 1) a
+    (:|) :: a -> Vec n a -> Vec ('S n) a
 
-module Vector.Vector
-    ( fromList
-    , SuperVector((+),(-),(*))
-    , (%)
-    , V3
-    , V2
-    , Vector) where
-
-import Data.List (intercalate)
-import GHC.TypeNats
-import Data.Proxy
-import Data.Kind (Type)
+infixr 5 :|
 
 
-newtype ListVector (dim :: Nat) a = Ve {getV :: [a]}
 
+singleton :: Double -> Vector (Lit 1)
+singleton = V1
 
-type V3     = ListVector 3 Double 
-type V2     = ListVector 2 Double
-type Vector (dim :: Nat) = ListVector dim Double
+toList :: Vector n -> [Double]
+toList (V1 x) = [x]
+toList (x :| xs) = x : toList xs
 
-class SuperVector v a  where
+type V2 = Vector (Lit 2)
+type V3 = Vector (Lit 3)
+type Vector (n :: Nat) = Vec n Double
+
+instance Show a => Show (Vec n a) where
+    show xs = '<' : show' xs  ++ ">"
+        where
+            show' :: forall n a. Show a => Vec n a -> String
+            show' (V1 x)    = show x
+            show' (x :| xs) = show x ++ ',' : show' xs
+
+class SuperVector v a where
     type V v a
-    type S v a 
+    type S v a
     infixl 6 +
     infixl 6 -
     infixl 7 *
+    -- since we are working with type families, the result should always be a type? returning 'a' yields an error....
     (+) :: v -> a -> V v a
     (-) :: v -> a -> V v a
     (*) :: v -> a -> V v a -- cross product/
     -- We need a proxy since neither type variable (v/a)  uniquely determines the other....
-    -- since we are working with type families, the result should always be a type? returning 'a' yields an error....
-    f   :: a -> v -> v -> S v a
+    f   :: Proxy a -> v -> v -> S v a
 
 
-instance (KnownNat dim) => SuperVector (ListVector dim Double) Double where
-    type V (ListVector dim Double) Double = (ListVector dim Double)
-    type S (ListVector dim Double) Double = Double
-    Ve v + a = Ve $ map (Prelude.+a) v
-    Ve v - a = Ve $ map (Prelude.-a) v
-    Ve v * a = Ve $ map (Prelude.*a) v
+
+pointWise' :: (a->a->a) -> Vec n a -> Vec n a -> Vec n a
+pointWise' f (V1 x) (V1 y) = V1 $ f x y
+pointWise' f (x :| xs) (y :| ys) = f x y :| pointWise' f xs ys
+
+f'   :: (N.Num a) => Proxy (Vec n a) -> Vec n a -> Vec n a -> a
+f' _ (V1 x)     (V1 y)        = (N.*) x y
+f' _ (x :| xs) (y :| ys)  = (N.+) ((N.*) x y) (f' a xs ys)
+    where
+        a :: Proxy (Vec n a)
+        a = Proxy
+f' _ _  _                 = undefined
+
+instance SuperVector (Vec n Double) (Vec n Double) where
+    type V (Vec n Double) (Vec n Double) = Vec n Double
+    type S (Vec n Double) (Vec n Double) = Double
+
+    (+) = pointWise' (N.+)
+    (-) = pointWise' (N.-)
+
+    f = f'
+
+    (a1 :| a2 :| V1 a3) * (b1 :| b2 :| V1 b3) = x1 :| x2 :| V1 x3
+        where
+            p  = (N.*)
+            m  = (N.-)
+            x1 = p a2 b3 `m` p a3 b2
+            x2 = p a1 b3 `m` p a3 b1
+            x3 = p a1 b2 `m` p a2 b1
+    _ * _ = undefined
+
+    
+
+instance SuperVector (Vec n Double) Double where
+    type V (Vec n Double) Double = (Vec n Double)
+    type S (Vec n Double) Double = Double
+
+    (x :| xs) + n = (N.+) x n :| (xs - n)
+    V1 x + n      = V1 $ (N.+) x n
+
+    (x :| xs) - n = (N.-) x n :| (xs - n)
+    V1 x - n      = V1 $ (N.-) x n
+
+    (x :| xs) * n = (N.*) x n :| (xs * n)
+    V1 x * n      = V1 $ (N.*) x n
+
+    f _ _ = error "Cannot do a Dot product between a scalar and a vector"
+
+instance SuperVector Double (Vec n Double) where
+    type V Double (Vec n Double) = (Vec n Double)
+    type S Double (Vec n Double) = Double
+
+    n + (x :| xs) = (N.+) n x :| n + xs
+    n + V1 x      = V1 $ (N.+) n x
+
+    n - (x :| xs) = (N.-) n x :| (n - xs)
+    n - V1 x      = V1 $ (N.-) n x
+
+    n * (x :| xs) = (N.*) n x :| n * xs
+    n * V1 x      = V1 $ (N.*) n x
+
     f _ _ = error "Cannot do a Dot product between a scalar and a vector"
 
 
-instance (KnownNat dim) => SuperVector (ListVector dim Double) (ListVector dim Double) where
-    type V (ListVector dim Double) (ListVector dim Double) = (ListVector dim Double)
-    type S (ListVector dim Double) (ListVector dim Double) = Double
-    Ve v + Ve v' = Ve $ zipWith (Prelude.+) v v'
-    Ve v - Ve v' = Ve $ zipWith (Prelude.-) v v'
-    Ve v * Ve v' 
-        | d == 3    = Ve [p a2 b3 `m` p a3 b2,p a1 b3 `m` p a3 b1, p a1 b2 `m` p a2 b1]
-        | otherwise = error "Cross product only known for 3 dimensions!"
-        where
-            d = fromIntegral (natVal (Proxy @dim))
-            [a1,a2,a3] = v
-            [b1,b2,b3] = v'
-            p = (Prelude.*)
-            m = (Prelude.-)
-    f _ (Ve v)  (Ve v') = sum (zipWith (Prelude.*) v v')
-
-
-instance (KnownNat dim) => SuperVector Double (ListVector dim Double) where
-    type V Double (ListVector dim Double) = (ListVector dim Double)
-    type S Double (ListVector dim Double) = Double
-    a + Ve v = Ve $ map (a Prelude.+) v
-    a - Ve v = Ve $ map (a Prelude.-) v
-    a * Ve v = Ve $ map (a Prelude.*) v
-    f _ _ _ = error "Cannot do a Dot product between a scalar and a vector"
-
-
-instance (Show a) => Show (ListVector dim a) where
-    show (Ve v) = '(' : intercalate ","  (map show v) ++ ")"
-
-
-fromList :: forall dim . (KnownNat dim) => [Double] -> ListVector dim Double
-fromList xs 
-    | length xs == d = Ve {getV=xs} 
-    | otherwise      = error "Bad Dimention"
-    where
-        d = fromIntegral (natVal (Proxy @dim))
 
 infixl 7 %
-(%) :: KnownNat dim => ListVector dim Double -> ListVector dim Double -> Double
-v % v' = f' 0 v v' 
-    where 
-        f' :: SuperVector a Double => Double -> a -> a -> S a Double
-        f' = f 
+(%) ::  Vector dim -> Vector dim -> Double
+v % v' = f' Proxy v v'
+    where
+        f' :: Proxy (Vector dim) -> Vector dim  -> Vector dim  -> S (Vector dim)  Double
+        f' = f
+
 
 main' :: IO ()
-main' = print v4
+main' = print v5
     where
-        v3 :: V3 
-        v3 = fromList [1,2,3]
-        v3P1 =  v3 Vector.Vector.+ (3.0 :: Double)
-        v4 = v3P1 Vector.Vector.+ v3
+        v1 :: Vec (Lit 3) Int
+        v1 = 1 :| 2 :| V1 3
+
+        v2 :: Vec (Lit 3) Double
+        v2 = 1 :| 2 :| V1 3
+
+        v3 :: Vec (Lit 2) Double
+        v3 = 1 :| V1 2
+
+        v4 :: Vec (Lit 3) Double
+        v4 = 1 :| 2 :| V1 3
+
+        v5 = v2 % v4
+
+        v6 :: Vec (Lit 0) Double
+        v6 = undefined

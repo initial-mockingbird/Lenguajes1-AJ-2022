@@ -27,6 +27,7 @@ dependencies:
 - containers
 - hspec
 - QuickCheck
+- singletons
 library:
   source-dirs: src
 
