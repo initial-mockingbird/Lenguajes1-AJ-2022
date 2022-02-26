@@ -2,7 +2,7 @@
 module Main where
 
 import Prelude hiding (Num(..))
-import Vector.VectorSafe
+import Vector.Vector
 
 main :: IO ()
 main = putStrLn "Yup, main is here."

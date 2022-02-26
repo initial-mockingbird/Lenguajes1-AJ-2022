@@ -1,5 +1,5 @@
 
-
-
+import TestVector.TestVector
+import Test.Hspec
 main :: IO ()
-main = putStrLn "Test suite not yet implemented"
+main = hspec v3Spec

@@ -28,6 +28,7 @@ dependencies:
 - hspec
 - QuickCheck
 - singletons
+- finite-typelits
 library:
   source-dirs: src
 

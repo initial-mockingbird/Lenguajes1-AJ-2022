@@ -7,25 +7,17 @@
 {-# LANGUAGE TypeFamilies          #-}
 {-# LANGUAGE TypeOperators         #-}
 
-module Vector.VectorSafe
-    ( Vector 
-    , singleton
-    , (<:>)
-    , V3
-    , V2
-    , SuperVector((+),(-),(*))
-    , (%)
-    , toList
-    , Vec (..)
-    )
-    where
+module Vector.VectorSafe where
 
 import           Data.Kind    (Type)
 import           Data.Proxy   (Proxy (..))
 import qualified GHC.Num      as N
+import qualified Data.List ((!!))
 import           GHC.TypeNats 
 import           Prelude      hiding (Num (..))
-
+import GHC.Base (undefined)
+import Data.Singletons (unSingFun2)
+import Data.Finite
 
 data Vec (n :: Nat) a  where
     V1   :: a -> Vec 1 a
@@ -74,7 +66,8 @@ class SuperVector v a where
     -- We need a proxy since neither type variable (v/a)  uniquely determines the other....
     f   :: Proxy a -> v -> v -> S v a
 
-
+index :: Vector n -> Finite n -> Double
+index v i = toList v !! fromIntegral (getFinite i)
 
 
 instance SuperVector (Vec n Double) (Vec n Double) where
@@ -109,7 +102,7 @@ instance SuperVector (Vec n Double) Double where
     type V (Vec n Double) Double = (Vec n Double)
     type S (Vec n Double) Double = Double
 
-    (x :| xs) + n = (N.+) x n :| (xs - n)
+    (x :| xs) + n = (N.+) x n :| (xs + n)
     V1 x + n      = V1 $ (N.+) x n
 
     (x :| xs) - n = (N.-) x n :| (xs - n)
@@ -137,34 +130,9 @@ instance SuperVector Double (Vec n Double) where
     f _ _ = error "Cannot do a Dot product between a scalar and a vector"
 
 
-
-
-
-
 infixl 7 %
 (%) ::  Vector dim -> Vector dim -> Double
 v % v' = f' Proxy v v'
     where
         f' :: Proxy (Vector dim) -> Vector dim  -> Vector dim  -> S (Vector dim)  Double
         f' = f
-
-
-main' :: IO ()
-main' = print v5
-    where
-        v1 :: Vec 3 Int
-        v1 = 1 :| 2 :| V1 3
-
-        v2 :: Vec 3 Double
-        v2 = 1 :| 2 :| V1 3
-
-        v3 :: Vec 2 Double
-        v3 = 1 :| V1 2
-
-        v4 :: Vec 3 Double
-        v4 = 1 :| 2 :| V1 3
-
-        v5 = v2 % v4
-
-        v6 :: Vec 0 Double
-        v6 = undefined

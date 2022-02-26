@@ -197,7 +197,7 @@ Parcialito
 
 Para APL, los namespaces poseen una estructura de tipo directorio, asi que si declarasemos un modulo dentro de parcialito, pudiesemos entrar a el, y modificarlo, modificando asi a parcialito, ademas tambien provee un sin fin de utilidades adicionales que estan completamente fuera del scope de la pregunta.
 
-Ahora, consideraria que estos modulos son abiertos o cerrados? Segun lo que hemos visto son cerrados, pues todo nombre mencionado en el codigo debe: o ser definido localmente, o importado de otro modulo.... Pero don't take my word for it, en el librito de APL (Mastering Dyalog APL A Complete Introduction to Dyalog APL, Bernard Legrand) sugieren que puedes hacer cosas mucho mas locas con los modulos (pues estos en realidad son arreglos!! y por ende se pueden tratar como a uno le de la gana).
+Ahora, consideraria que estos modulos son abiertos o cerrados? Segun lo que hemos visto son selectivamente abiertos, pues siempre puedes importar/exportar cosas de manera selectiva gracias a que el objeto que guarda el namespace es en realidad una referencia (mas en la siguiente seccion!).
 
 # Aliases, Sobrecarga y Polimorfismo.
 

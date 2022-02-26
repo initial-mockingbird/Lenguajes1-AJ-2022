@@ -5,9 +5,7 @@ Este es el modulo de vectores de la pregunta 3 del parcial.
 ## Que provee el modulo?
 
 Adicional a las instrucciones dadas en el parcial (modulo de vectores de 3 dimensiones que sobrecargue los
-operadores dados), el modulo funciona para vectores de cualquier dimension codificado a nivel de tipo! , esto significa que
-por definicion, no se pueden sumar/restar/sacar productos entre dos vectores de distinta dimension, ni tampoco se puede
-construir un vector couya longitud no corresponda con la establecida en su tipo (error de compilacion!).
+operadores dados), el modulo funciona para vectores de cualquier dimension codificado a nivel de tipo! , esto significa que por definicion, no se pueden sumar/restar/sacar productos entre dos vectores de distinta dimension, ni tampoco se puede construir un vector cuya longitud no corresponda con la establecida en su tipo (error de compilacion!).
 
 ## How to use
 
@@ -43,6 +41,21 @@ Notese que necesitamos la extension `DataKinds` para poder promover los numeros 
 Los vectores se construyen a traves de los constructores: `<:>` y `singleton`.
 
 Tratar de sacar producto cruz entre cualquier par de vectores que no posean dimension 3, resultara en un runtime exception.
+
+## Coverage
+
+Para ver el coverage de los test basta con ejecutraR:
+
+```
+stack clean
+stack test --coverage
+```
+
+Sin embargo NO se deje enganar por el bajo `%`, si explora la suite (precisamente `TestVector.TestVector`), vera que la suite de testeo se prueba contra la API (no representacion interna!) porque al fin y al cabo, lo que queremos garantizar es que el cliente obtenga las operaciones que pidio, y que dichas operaciones cumplan los invariantes que debe cumplir.
+
+### Puntos a mejorar de la suite de testeo.
+
+No encontre una forma de generar una instancia de `Arbitrary` para generar vectores de cualquier longitud. Se acepta sabiduria!.
 
 
 ## Fallos/Cosas que no se como arreglar (se acepta iluminacion!).
@@ -93,3 +106,4 @@ a + (1 <:> singleton 2)  -- Longitudes distintas, rechazado
 1 <:> a                  -- Falla el constraint de (<:>).
 1 <:> 2 <:> a            -- lo mismo, como (<:>) asocia a la derecha, falla en 2 <:> a
 ```
+
