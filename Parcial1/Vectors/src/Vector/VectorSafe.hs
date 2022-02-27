@@ -76,11 +76,10 @@ instance SuperVector (Vec n Double) (Vec n Double) where
 
     (V1 x)    + (V1 y)    = V1 $ (N.+) x y
     (x :| xs) + (y :| ys) = (N.+) x y :| (xs + ys)
-    _ + _                 = undefined
 
     (V1 x)    - (V1 y)    = V1 $ (N.-) x y
     (x :| xs) - (y :| ys) = (N.-) x y :| (xs - ys)
-    _ - _                 = undefined
+
 
     (a1 :| a2 :| V1 a3) * (b1 :| b2 :| V1 b3) = x1 :| x2 :| V1 x3
         where
@@ -96,7 +95,7 @@ instance SuperVector (Vec n Double) (Vec n Double) where
         where
             a :: Proxy (Vec (n-1) Double)
             a = Proxy
-    f _ _  _                 = undefined
+
 
 instance SuperVector (Vec n Double) Double where
     type V (Vec n Double) Double = (Vec n Double)

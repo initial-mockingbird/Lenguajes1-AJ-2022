@@ -55,14 +55,18 @@ v3Spec = do
   describe "Suite de testeo para vectores de tamano 3" $ do
     prop "To list es correcto" $
       \(V3G xs@(x1:|x2:| V1 x3)) -> toList xs == [x1,x2,x3]
-    prop "La suma es correcta" $
+    prop "La suma entre vectores correcta" $
       \(V3G xs) (V3G ys) -> toList (xs + ys) == zipWith (N.+)  (toList xs) (toList ys) 
-    prop "La resta es correcta" $ 
-      \(V3G xs) (V3G ys) -> toList (xs - ys) == zipWith (N.-)  (toList xs) (toList ys) 
     prop "La suma por escalar a derecha es correcta" $
       \(V3G xs) n -> toList (xs + n) == map (N.+ n)  (toList xs) 
     prop "La suma por escalar a izquierda es correcta" $
       \(V3G xs) n -> toList (n + xs) == map (n N.+)  (toList xs)
+    prop "La resta entre vectores es  correcta" $ 
+      \(V3G xs) (V3G ys) -> toList (xs - ys) == zipWith (N.-)  (toList xs) (toList ys) 
+    prop "La resta por escalar a derecha es correcta" $
+      \(V3G xs) n -> toList (xs - n) == map (N.- n)  (toList xs) 
+    prop "La resta por escalar a izquierda es correcta" $
+      \(V3G xs) n -> toList (n - xs) == map (n N.-)  (toList xs)
     prop "La multiplicacion por escalar a derecha es correcta" $
       \(V3G xs) n -> toList (xs * n) == map (N.* n)  (toList xs) 
     prop "La multiplicacion por escalar a izquierda es correcta" $

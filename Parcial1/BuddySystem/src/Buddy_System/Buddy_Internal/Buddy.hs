@@ -19,7 +19,7 @@ import Data.Monoid
 ---------------------------------
 
 -- | Binary Tree
-data Tree a = Leaf | Node a (Tree a) (Tree a) 
+data Tree a = Leaf | Node a (Tree a) (Tree a)  deriving (Eq)
 
 -- | Either Left or Right for Binary Trees.
 data Direction = L | R deriving (Eq,Show)
@@ -29,7 +29,7 @@ data MemoryNode = MN
     { value       :: Int    -- ^ Total Memory of the Block.
     , leftValues  :: ValRep 
     , rightValues :: ValRep  
-    } deriving Show
+    } deriving (Eq,Show)
 
 
 type Nombre = String 
@@ -50,14 +50,11 @@ data MemState = MST
 -- | Holds all the possible errors relating to handling memory.
 data Errors = InsufficientMemoryE  | FragmentationE | AlreadyExecutingE | NotInMemoryE  deriving Show
 
-
-
-
-
 ---------------------------------
 -- Instances
 ---------------------------------
 
+-- Pal debuggeo intenso
 instance (Show a) => Show (Tree a) where
     show t = drawTree t' 
         where
@@ -70,6 +67,7 @@ instance (Show a) => Show (Tree a) where
 
             t' = trans t
 
+-- Creo q no se usa....
 instance Functor Tree where
     fmap f (Node a l r) = Node (f a) (fmap f l) (fmap f r)
     fmap _ Leaf         = Leaf
@@ -82,7 +80,7 @@ instance Functor Tree where
 iMST :: Int -> MemState
 iMST total = MST {memory=Node MN {value=total', leftValues=Map.empty , rightValues=Map.empty} Leaf Leaf, pCrumbs=Map.empty, totalM=total'}
     where
-        total' = floor $ logBase 2 $ fromIntegral total
+        total' = max 1 $ floor $ logBase 2 $ fromIntegral total
 ---------------------------------
 -- Accesibility
 ---------------------------------
@@ -174,35 +172,32 @@ malloc' (actualBlockSize,inflatedSize) (Node mn@MN{..} left right) = case bimap 
         f xs = foldr (\n acc -> acc <|> (n <$ Map.lookup n xs) ) Nothing $ reverse [inflatedSize .. value]
 malloc' _ Leaf = throwError InsufficientMemoryE
 
-m = malloc :: Nombre -> Int -> StateT MemState (Either Errors) ()
-mem = iMST 1024
-
-aux = let Right (_,a) = runStateT (m "AdeAde" 115)  mem in a
-aux2 = runStateT (m "AdeAde2" 20)  aux
-
 -- | :) please be ok.
 malloc :: MonadError Errors m => Nombre -> Int -> StateT MemState m ()
 malloc nombre size = do
     alreadyInCheck nombre
-    let size' = ceiling $ logBase 2 $ fromIntegral size
+    let size' = max 1 $ ceiling $ logBase 2 $ fromIntegral size
     memTree <- memory <$> get
     (memTree',crumbs) <- fmap fromReversedEndo <$> runWriterT (malloc' (size',size') memTree)
     updateTree memTree'
     updateCrumbs nombre crumbs
-    return ()
 
+-- | Frees a name from memory
 free :: MonadError Errors m => Nombre -> StateT MemState m ()
 free nombre = do
+    -- get the crumbs associated with the program
     crumbs' <-  Map.lookup nombre . pCrumbs <$> get
     maxMem  <- totalM <$> get 
+    -- if free yields an empty tree, create a new one with maximum memory.
     let free'' n t = case free' n t of Leaf -> makeFreeNode maxMem; t -> t
     case  crumbs' of
-        Nothing     -> throwError NotInMemoryE
-        Just crumbs -> do 
+        Nothing     -> throwError NotInMemoryE -- name not found, yield an error
+        Just crumbs -> do  -- name found, update tree
             t <- get  
             (updateTree . free'' crumbs . memory) t
             modify (\t@MST{..} -> t{pCrumbs= Map.delete nombre pCrumbs})
 
+-- | Free from the tree, just traverse it and then unify siblings.
 free' :: Crumbs -> Tree MemoryNode -> Tree MemoryNode
 free' []  _        = Leaf 
 free' [L] (Node v@MN{..} _ r) 
@@ -226,7 +221,7 @@ free' (R:dirs) (Node v l r)
 free' _ _ = undefined 
 
 
-
+-- | A human readable representation of the memory.
 showMemory :: MemState -> String
 showMemory MST {..} = case memory of
     Leaf -> let nombre = fst $ head $ Map.toList pCrumbs in  "| Block size: " ++ show (2^totalM) ++ ", Status: Occupied,    Name: " ++ nombre ++ "\n"
