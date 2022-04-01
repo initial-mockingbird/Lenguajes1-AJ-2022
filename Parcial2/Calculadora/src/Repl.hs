@@ -9,6 +9,7 @@ import Parser
 import Data.Bifunctor
 import System.IO (hFlush, stdout)
 import Data.List (foldl1')
+import Data.Char (toUpper)
 
 data Command 
     = Action Functionality Mode String  
@@ -43,4 +44,4 @@ readCommand :: String -> Either Error Command
 readCommand = first (const LexerError) <$> parse readCommand' "."
 
 repl :: IO ()
-repl = forever $ putStr ">>> " >> hFlush stdout >> getLine  >>= either print executeCommand . readCommand 
+repl = forever $ putStr ">>> " >> hFlush stdout >> fmap toUpper <$> getLine  >>= either print executeCommand . readCommand 

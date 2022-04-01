@@ -8,7 +8,6 @@ import qualified Data.Map as Map
 import Data.Functor
 import Data.Maybe 
 import Data.Bifunctor
-import Debug.Trace
 
 data Token
     = TkOp Operator
