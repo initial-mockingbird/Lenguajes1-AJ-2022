@@ -85,7 +85,7 @@ def main(log : bool = False) -> None :
 
     logger :  Callable[[int,int,int,int],None] = getLogFun()
 
-    for i in range(150):
+    for i in range(100):
         f  : int = F(i)
         tr : int = F_tail(i)
         gl : int = F_loop(i)
@@ -97,5 +97,5 @@ def main(log : bool = False) -> None :
         
 
 if __name__ == "__main__":
-    main(log = True)
+    main(log = False)
     
