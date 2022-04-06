@@ -1,6 +1,6 @@
 module Infix where
 
-data BinTree a b = Leaf b | Node a (BinTree a b) (BinTree a b)
+data BinTree a b = Leaf b | Node a (BinTree a b) (BinTree a b) deriving (Show, Eq)
 
 foldTree :: (a -> b -> b -> b) -> (c -> b) -> BinTree a c -> b 
 foldTree _ g (Leaf x) = g x
@@ -9,7 +9,7 @@ foldTree f x (Node a l r) =  f a lVal rVal
         lVal = foldTree f x l
         rVal = foldTree f x r
 
-newtype LeafNode = LN {getLF :: Int} deriving Show
+newtype LeafNode = LN {getLF :: Int} deriving (Show, Eq)
 
 data Operator
     = Plus
@@ -17,6 +17,12 @@ data Operator
     | Mult
     | Div 
     deriving (Eq, Show)
+
+data AssocDir = LeftAssoc | RightAssoc 
+
+
+getAssoc :: Operator -> AssocDir
+getAssoc _ = LeftAssoc
 
 newtype AST = AST {getAST :: BinTree Operator LeafNode}
 
@@ -43,19 +49,43 @@ prettyLeaf (LN n)   = show n
 
 
 regenerateAST :: AST -> String
-regenerateAST (AST t) = snd $ foldTree f (\ln -> (maxPrecLevel + 1, prettyLeaf ln)) t 
+regenerateAST (AST t) = snd $ foldTree f (\ln -> (maxPrecLevel + 1, prettyLeaf ln, Nothing )) t 
     where
-        f :: Operator -> (Int,String) -> (Int,String) -> (Int,String)
-        f nd (precL,l) (precR,r) = (precNd,lStr ++ ' ':prettyOperator nd ++ ' ':rStr )
+
+        snd (_,s,_) = s
+
+        f :: Operator -> (Int,String, Maybe Operator) -> (Int,String, Maybe Operator) -> (Int,String, Maybe Operator)
+        f nd (precL,l, ml) (precR,r, mr) = (precNd,lStr ++ ' ':prettyOperator nd ++ ' ':rStr , Just nd)
             where
                 precNd = getPrec nd 
-                lStr = parenthesize precNd precL l
-                rStr = parenthesize precNd precR r 
+                lStr = parenthesizePrec precNd precL nd ml LeftAssoc l
+                rStr = parenthesizePrec precNd precR nd mr RightAssoc r 
 
-        parenthesize :: Int -> Int -> (String -> String)
-        parenthesize father child 
-            | father > child = \s -> "(" ++ s ++ ")"
+                --lStr = parenthesizeAssoc (Just nd) ml LeftAssoc  lStr' 
+                --rStr = parenthesizeAssoc (Just nd) mr RightAssoc rStr' 
+
+        parenthesizePrec :: Int -> Int -> Operator -> Maybe Operator -> AssocDir -> (String -> String)
+        parenthesizePrec father child f mc assoc 
+            | father > child  = \s -> "(" ++ s ++ ")"
+            | father == child = parenthesizeAssoc (Just f) (Just f) assoc
             | otherwise                      = id 
+
+        parenthesizeAssoc :: Maybe Operator -> Maybe Operator -> (AssocDir -> String -> String)
+        parenthesizeAssoc Nothing _  =  const id
+        parenthesizeAssoc _ Nothing  = const id
+        parenthesizeAssoc (Just op) (Just op')
+            | op == op'  = case getAssoc op of 
+                LeftAssoc  -> g
+                RightAssoc -> f
+            | otherwise  = const id 
+                where
+                    f LeftAssoc  s = "(" ++ s ++ ")"
+                    f RightAssoc s = s
+
+                    g RightAssoc  s = "(" ++ s ++ ")"
+                    g LeftAssoc   s = s
+
+
 
 
 operate :: AST -> Int

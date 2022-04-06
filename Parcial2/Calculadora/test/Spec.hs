@@ -1,4 +1,4 @@
 import InfixSpec
-
+import UtilsSpec
 main :: IO ()
-main = infixSpec
+main = sequence_ [infixSpec, utilsSpec]

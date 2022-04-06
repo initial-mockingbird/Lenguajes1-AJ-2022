@@ -63,6 +63,7 @@ test-suite Calculadora-test
   main-is: Spec.hs
   other-modules:
       InfixSpec
+      UtilsSpec
       Paths_Calculadora
   hs-source-dirs:
       test
