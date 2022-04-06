@@ -21,7 +21,10 @@ esMinHeapBalanceado = isJust <<< foldTree f g
         g x = Just $ Tuple x 1
         f val =  (<<<) join <<< lift2 (h val)
 
+        -- un minheap esta balanceado si...
         h :: forall a. Ord a => a -> Tuple a Int -> Tuple a Int -> Maybe (Tuple a Int)
         h x (Tuple l dl) (Tuple r dr) 
+            -- cada nodo es menor que su hijo izquierdo y derecho y...
+            -- la diferencia entre las alturas de izquierda y derecha es 1....
             | x <= l && x <= r && abs (dl-dr) == 1 = Just $ Tuple x $ max dl dr + 1
             | otherwise = Nothing

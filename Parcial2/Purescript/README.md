@@ -81,3 +81,24 @@ f x y = ?g x y
 --      ^^
 -- type hole, equivalente al _ de haskell
 ```
+
+## Como compilar...
+
+El [siguiente link](https://github.com/purescript/documentation/blob/master/guides/Getting-Started.md) tiene una introduccion al lenguaje, sin embargo la version corta es la siguiente:
+
+
+Primero necesitaremos instalar `spago` (equivaelente a `stack` para haskell):
+
+
+```bash
+npm install -g spago
+```
+
+Luego, solo compilamos con:
+
+```bash
+$ spago build
+```
+
+El archivo [Church.purs](src/Church.purs) contiene la respuesta a la pregunta de los numerales de church, y el archivo
+[Tree.purs](src/Tree.purs) al del arbol.
