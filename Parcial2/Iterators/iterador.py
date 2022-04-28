@@ -46,4 +46,6 @@ if __name__ == "__main__":
     for m in suspenso1([1,2,3]):
         sus1.append(m)
     
+    print(sus)
+    print(sus1)
     assert (sus == sus1)

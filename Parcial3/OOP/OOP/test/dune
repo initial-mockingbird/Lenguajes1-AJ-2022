@@ -1,0 +1,4 @@
+(test
+ (libraries qcheck ounit2 OOP)
+ (name test)
+)
