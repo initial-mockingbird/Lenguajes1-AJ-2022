@@ -240,7 +240,7 @@ j#x;;
 
 Dado que oCAML posee despacho dinamico, todo se comporta como uno espera: lo ultimo ejecutado es lo que se mantiene.
 
-Sobre el polimorfismo parametrico, ya lo hemos hablado en la seccion anterior cuando tocamos las clases, podemos manejar el polimorfismo anadiendo explicitamente variables de tipo en las clases, pero en caso de que tengamos un metodo que realmente sirva para cualquier tipo, lo podemos expresar como si fuese un tipo existencial.
+Sobre el polimorfismo parametrico, ya lo hemos hablado en la seccion anterior cuando tocamos las clases, podemos manejar el polimorfismo anadiendo explicitamente variables de tipo en las clases, pero en caso de que tengamos un metodo que realmente sirva para cualquier tipo, lo podemos expresar como si fuese un para todo explicito.
 
 Sobre la varianza... oh god.
 
